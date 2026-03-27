@@ -1,0 +1,68 @@
+{% if grouped_data %}
+    <div class="d-print-block">
+        <div class="text-center mb-4">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <img src="/static/img/college_logo.png" alt="Logo" style="height: 60px;" onerror="this.src='https://via.placeholder.com/60?text=MT'">
+                <div class="ms-3 text-start">
+                    <h4 class="mb-0 fw-bold">MAHARAJA INSTITUTE OF TECHNOLOGY THANDAVAPURA</h4>
+                    <h5 class="mb-0 fw-bold text-center">INVIGILATOR DUTY</h5>
+                </div>
+            </div>
+        </div>
+
+        {% for dept, teachers in grouped_data %}
+        <div class="mb-5 page-break-after">
+            <table class="table table-bordered border-dark text-center align-middle" style="font-size: 0.9rem;">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th class="fw-bold">Faculty ID</th>
+                        <th class="fw-bold">Faculty Name</th>
+                        <th class="fw-bold">Department</th>
+                        <th class="fw-bold">Duty 1</th>
+                        <th class="fw-bold">Session 1</th>
+                        <th class="fw-bold">Duty 2</th>
+                        <th class="fw-bold">Session 2</th>
+                        <th class="fw-bold">Room No</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in teachers %}
+                    <tr>
+                        <td>{{ t.faculty_id|default:"-" }}</td>
+                        <td class="text-start">{{ t.name }}</td>
+                        <td>{{ t.dept }}</td>
+                        <td>{{ t.d1_date|date:"d/m/Y"|default:"" }}</td>
+                        <td>{{ t.d1_session|default:"" }}</td>
+                        <td>{{ t.d2_date|date:"d/m/Y"|default:"" }}</td>
+                        <td>{{ t.d2_session|default:"" }}</td>
+                        <td>{{ t.room_no }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="d-print-none text-center mt-4">
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Download / Print All Duty Reports</button>
+    </div>
+
+    <style>
+        @media print {
+            .sidebar, .nav-tabs, button, hr, .alert { display: none !important; }
+            .content { padding: 0 !important; width: 100% !important; margin: 0 !important; }
+            body { background: white !important; }
+            .table { font-size: 8pt; border-collapse: collapse !important; width: 100%; }
+            th, td { border: 1px solid black !important; padding: 2px 4px !important; }
+            .table thead th { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page-break-after { page-break-after: always; }
+        }
+        .table thead th { vertical-align: middle; }
+    </style>
+{% else %}
+    <div class="text-center py-5 text-muted">
+        <h4><i class="bi bi-person-x fs-1"></i></h4>
+        <p>No invigilator duty list generated yet.</p>
+    </div>
+{% endif %}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Seat Allotment Automator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Inter', sans-serif; }
+        .sidebar { min-height: 100vh; background: #2c3e50; color: white; padding: 20px 0; }
+        .sidebar a { color: #ecf0f1; text-decoration: none; display: block; padding: 10px 20px; transition: 0.3s; }
+        .sidebar a:hover { background: #34495e; border-left: 4px solid #3498db; }
+        .content { padding: 30px; }
+        .card { border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
+        .card-header { background-color: white; border-bottom: 1px solid #f1f1f1; font-weight: 600; }
+        .btn-custom { border-radius: 8px; font-weight: 500; }
+        .stats-card { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .stats-card h2 { font-size: 2.5rem; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <h4 class="text-center mb-4">Seat<span class="text-info">Automator</span></h4>
+                <a href="#dashboard" onclick="showSection('dashboard-sec')"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a href="#students" onclick="showSection('students-sec')" hx-get="{% url 'student_list' %}" hx-target="#student-list-container"><i class="bi bi-people"></i> Manage Students</a>
+                <a href="#upload" onclick="showSection('upload-sec')"><i class="bi bi-cloud-upload"></i> Upload Data</a>
+                <a href="#generate" onclick="showSection('generate-sec')"><i class="bi bi-magic"></i> Generate Allotments</a>
+                <a href="#reports" onclick="showSection('reports-sec')" hx-get="{% url 'seating_reports' %}" hx-target="#seating-reports-div"><i class="bi bi-file-text"></i> Reports</a>
+                <hr class="border-secondary mx-3">
+                <form action="{% url 'clear_data' %}" method="post" class="px-3" onsubmit="return confirm('Ensure you want to wipe all data?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100 btn-sm">Clear All Data</button>
+                </form>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 content">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.body.addEventListener('htmx:configRequest', function(event) {
+            // Add CSRF to HTMX requests
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+
+        function showSection(secId) {
+            document.querySelectorAll('.app-section').forEach(el => el.style.display = 'none');
+            document.getElementById(secId).style.display = 'block';
+        }
+        
+        // Show dashboard by default
+        document.addEventListener('DOMContentLoaded', () => showSection('dashboard-sec'));
+    </script>
+</body>
+</html>

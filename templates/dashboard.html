@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container bg-white shadow-sm p-4 rounded mb-4">
+    <h2 class="mb-4 text-primary fw-bold">IA Seat Allotment Automator</h2>
+    
+    <!-- STATS -->
+    <div id="dashboard-sec" class="app-section">
+        <h4 class="mb-3 text-secondary">Overview Dashboard</h4>
+        <div class="row text-center mb-4 g-3">
+            <div class="col-md-3">
+                <div class="card p-3 stats-card rounded">
+                    <h5>Students</h5>
+                    <h2 class="fw-bold">{{ counts.students }}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 stats-card bg-success text-white">
+                    <h5>Teachers</h5>
+                    <h2 class="fw-bold">{{ counts.teachers }}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 stats-card bg-warning text-dark">
+                    <h5>Rooms</h5>
+                    <h2 class="fw-bold">{{ counts.rooms }}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 stats-card bg-danger text-white">
+                    <h5>Exams</h5>
+                    <h2 class="fw-bold">{{ counts.exams }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <button class="btn btn-outline-primary btn-lg px-5 shadow-sm" onclick="showSection('upload-sec')">
+                <i class="bi bi-cloud-arrow-up"></i> Upload Data
+            </button>
+            <button class="btn btn-outline-success btn-lg px-5 shadow-sm" onclick="showSection('generate-sec')">
+                <i class="bi bi-magic"></i> Generate Plan
+            </button>
+            <button class="btn btn-outline-info btn-lg px-5 shadow-sm" onclick="showSection('reports-sec')" hx-get="{% url 'seating_reports' %}" hx-target="#seating-reports-div">
+                <i class="bi bi-file-earmark-text"></i> View Reports
+            </button>
+        </div>
+    </div>
+
+    <!-- STUDENTS MANAGEMENT SEC -->
+    <div id="students-sec" class="app-section animate__animated animate__fadeIn" style="display: none;">
+        <h4 class="text-secondary border-bottom pb-2 mb-4">Manage Students (Dynamic)</h4>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm p-4 border-0 bg-light mb-3">
+                    <h5 class="mb-3">Add New Student</h5>
+                    <form action="{% url 'student_add' %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" name="usn" class="form-control" placeholder="USN / Roll No" required>
+                        </div>
+                        <div class="mb-2">
+                            <select name="department" class="form-select" required>
+                                <option value="" disabled selected>Select Department</option>
+                                <option value="MCA">MCA</option>
+                                <option value="MBA">MBA</option>
+                                <option value="CSE">CSE</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <input type="number" name="semester" class="form-control" placeholder="Semester" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-person-plus"></i> Add Student</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Enrolled Students</h5>
+                        <div class="d-flex">
+                            <input type="text" class="form-control form-control-sm me-2" name="search" placeholder="Search by USN, Name, or Dept"
+                                   hx-get="{% url 'student_list' %}"
+                                   hx-trigger="keyup changed delay:500ms"
+                                   hx-target="#student-list-container">
+                            <button class="btn btn-sm btn-outline-secondary" hx-get="{% url 'student_list' %}" hx-target="#student-list-container"><i class="bi bi-arrow-clockwise"></i> Load</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="student-list-container">
+                            <div class="p-4 text-center text-muted"><div class="spinner-border spinner-border-sm"></div> Select 'Load' or enter filter</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPLOAD SEC -->
+    <div id="upload-sec" class="app-section animate__animated animate__fadeIn" style="display: none;">
+        <h4 class="text-secondary border-bottom pb-2 mb-4">Upload CSV or PDF Data</h4>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm p-4 border-0 bg-light">
+                    <h5>Upload Students List</h5>
+                    <p class="text-muted small">Required Cols: Name, USN, Department, Semester</p>
+                    <form action="{% url 'upload_data' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="file_type" value="students">
+                        <input type="file" name="file" class="form-control mb-3" required accept=".csv,.pdf">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Upload Students</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm p-4 border-0 bg-light">
+                    <h5>Upload Teachers List</h5>
+                    <p class="text-muted small">Required Cols: Faculty ID, Name, Department</p>
+                    <form action="{% url 'upload_data' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="file_type" value="teachers">
+                        <input type="file" name="file" class="form-control mb-3" required accept=".csv,.pdf">
+                        <button type="submit" class="btn btn-success w-100 fw-bold">Upload Teachers</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm p-4 border-0 bg-light">
+                    <h5>Upload Rooms List</h5>
+                    <p class="text-muted small">Required Cols: Room Number, Number of Benches</p>
+                    <form action="{% url 'upload_data' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="file_type" value="rooms">
+                        <input type="file" name="file" class="form-control mb-3" required accept=".csv,.pdf">
+                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Upload Rooms</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm p-4 border-0 bg-light">
+                    <h5>Upload Exams Schedule</h5>
+                    <p class="text-muted small">Required Cols: Exam Date, Time, Subject</p>
+                    <form action="{% url 'upload_data' %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="file_type" value="exams">
+                        <input type="file" name="file" class="form-control mb-3" required accept=".csv,.pdf">
+                        <button type="submit" class="btn btn-danger w-100 fw-bold">Upload Schedule</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GENERATE SEC -->
+    <div id="generate-sec" class="app-section animate__animated animate__fadeIn" style="display: none;">
+        <h4 class="text-secondary border-bottom pb-2 mb-4">Generate Allotments</h4>
+        
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-lg p-4 border-0 text-center" style="background:#f8f9fa;">
+                    <i class="display-3 text-primary mb-3">🎓</i>
+                    <h5 class="fw-bold">Student Seating Pattern</h5>
+                    <p class="text-muted">Generate room-wise, bench-wise (3 per bench) seating arrangement.</p>
+                    <form hx-post="{% url 'generate_seating' %}" hx-target="#gen-seating-result" hx-indicator="#seating-spinner">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button name="shuffle" value="false" class="btn btn-primary btn-lg fw-bold w-100 shadow">Generate Seating Process</button>
+                            <button name="shuffle" value="true" class="btn btn-warning btn-lg fw-bold w-100 shadow" title="Shuffle & Re-generate">🔀 Shuffle Seating</button>
+                        </div>
+                    </form>
+                    
+                    <div id="seating-spinner" class="htmx-indicator mt-3">
+                        <div class="spinner-border text-primary" role="status"></div> Processing...
+                    </div>
+                    
+                    <div id="gen-seating-result" class="mt-3 text-success fw-bold"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-lg p-4 border-0 text-center bg-light">
+                    <i class="display-3 text-success mb-3">👨‍🏫</i>
+                    <h5 class="fw-bold">Teacher Invigilation Profile</h5>
+                    <p class="text-muted">Automatically assign teachers to rooms to balance workload.</p>
+                    <form hx-post="{% url 'generate_teachers' %}" hx-target="#gen-teacher-result" hx-indicator="#teacher-spinner">
+                        {% csrf_token %}
+                        <button class="btn btn-success btn-lg fw-bold w-100 shadow">Allocate Invigilators</button>
+                    </form>
+                    
+                    <div id="teacher-spinner" class="htmx-indicator mt-3">
+                        <div class="spinner-border text-success" role="status"></div> Processing...
+                    </div>
+                    
+                    <div id="gen-teacher-result" class="mt-3 text-success fw-bold"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REPORTS SEC -->
+    <div id="reports-sec" class="app-section" style="display: none;">
+        <h4 class="text-secondary border-bottom pb-2 mb-4">View Allotment Reports</h4>
+        
+        <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold text-primary" id="seating-tab" data-bs-toggle="tab" data-bs-target="#seating-reports-div" type="button" role="tab">Student Seating</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-success" id="teacher-tab" data-bs-toggle="tab" data-bs-target="#teacher-reports-div" type="button" role="tab" hx-get="{% url 'teacher_reports' %}" hx-target="#teacher-reports-div">Invigilation Rules</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="myTabContent">
+            <!-- Content loaded via HTMX -->
+            <div class="tab-pane fade show active" id="seating-reports-div" role="tabpanel">
+                <div class="text-center py-5 text-muted"><div class="spinner-border"></div> Loading Student Data...</div>
+            </div>
+            <div class="tab-pane fade" id="teacher-reports-div" role="tabpanel">
+                <div class="text-center py-5 text-muted"><div class="spinner-border"></div> Loading Invigilator Assignments...</div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.htmx-indicator { display:none; }
+.htmx-request.htmx-indicator { display:block; }
+</style>
+{% endblock %}
